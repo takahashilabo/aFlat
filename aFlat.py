@@ -106,6 +106,32 @@ def perspective_transform_page(image: np.ndarray, src_points: List[Tuple[int, in
     return warped
 
 
+def enhance_contrast(image: np.ndarray) -> np.ndarray:
+    """
+    ガンマ補正と低コントラスト調整で画像を改善
+    
+    暗い画像を明るくして文字が読みやすくします。
+    
+    Args:
+        image: 入力画像（BGR）
+    
+    Returns:
+        露出が改善された画像
+    """
+    # ガンマ補正で露出を上げる
+    gamma = 1.8
+    inv_gamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    brightened = cv2.LUT(image, table)
+    
+    # コントラスト調整（低く設定）
+    alpha = 1.05  # コントラスト（1.0に近づけて低くする）
+    beta = 0
+    enhanced = cv2.convertScaleAbs(brightened, alpha=alpha, beta=beta)
+    
+    return enhanced
+
+
 def crop_bounding_rect(image: np.ndarray, src_points: List[Tuple[int, int]]) -> np.ndarray:
     """
     指定された4点を包含する矩形領域を切り出す（透視変換なし）
@@ -206,6 +232,7 @@ def process_spread_image_with_regions(image_path: Path,
                                        page_height: int = 1200) -> Tuple[np.ndarray, np.ndarray]:
     """
     指定された4点を使ってホモグラフィ変換で見開き画像から左右のページを切り出す
+    コントラスト改善を適用します
     
     Args:
         image_path: 画像ファイルのパス
@@ -225,6 +252,10 @@ def process_spread_image_with_regions(image_path: Path,
     # ホモグラフィ変換で透視補正
     left_page = perspective_transform_page(image, left_points, page_width, page_height)
     right_page = perspective_transform_page(image, right_points, page_width, page_height)
+    
+    # コントラストを改善
+    left_page = enhance_contrast(left_page)
+    right_page = enhance_contrast(right_page)
     
     return left_page, right_page
 
