@@ -1,4 +1,4 @@
-# 見開きページスキャナー (Book Scanner)
+# 見開きページスキャナー (aFlat)
 
 本の見開きページを撮影した画像から、左右のページを個別に切り出してPDFファイルを作成するPythonアプリケーションです。
 
@@ -42,13 +42,13 @@ uv sync
 ### 基本的な使い方
 
 ```bash
-uv run python book_scanner.py <画像フォルダのパス>
+uv run python aFlat.py <画像フォルダのパス>
 ```
 
 ### オプション
 
 ```bash
-uv run python book_scanner.py <画像フォルダのパス> [オプション]
+uv run python aFlat.py <画像フォルダのパス> [オプション]
 
 オプション:
   -o, --output <ファイル名>  出力PDFファイル名（デフォルト: output.pdf）
@@ -59,10 +59,10 @@ uv run python book_scanner.py <画像フォルダのパス> [オプション]
 
 ```bash
 # 基本的な使い方
-uv run python book_scanner.py ./images
+uv run python aFlat.py ./images
 
 # 出力ファイル名を指定
-uv run python book_scanner.py ./images -o my_book.pdf
+uv run python aFlat.py ./images -o my_book.pdf
 ```
 
 ## 操作手順
@@ -97,7 +97,7 @@ uv run python book_scanner.py ./images -o my_book.pdf
 ## プログラムの構造
 
 ```
-book_scanner.py
+aFlat.py
 ├── PagePointSelector クラス
 │   └── 画像上で4点を選択するGUI機能
 ├── perspective_transform_page 関数
@@ -151,12 +151,3 @@ result = cv2.warpPerspective(image, perspective_matrix, (page_width, page_height
 ## ライセンス
 
 このプロジェクトはMITライセンスの下で公開されています。
-
-## 今後の改善案
-
-- [ ] 自動ページ検出機能の追加
-- [ ] 自動輪郭線検出（エッジ検出ベース）
-- [ ] 領域情報の保存・読み込み機能
-- [ ] プレビュー機能
-- [ ] 画質調整オプション
-- [ ] より高度な透視補正
