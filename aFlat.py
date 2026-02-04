@@ -108,28 +108,31 @@ def perspective_transform_page(image: np.ndarray, src_points: List[Tuple[int, in
 
 def enhance_contrast(image: np.ndarray) -> np.ndarray:
     """
-    ガンマ補正と低コントラスト調整で画像を改善
+    影除去と二値化で画像を改善
     
-    暗い画像を明るくして文字が読みやすくします。
+    照明のムラを除去して文字を読みやすくします。
     
     Args:
         image: 入力画像（BGR）
     
     Returns:
-        露出が改善された画像
+        影が除去され読みやすくなった画像
     """
-    # ガンマ補正で露出を上げる
-    gamma = 1.8
-    inv_gamma = 1.0 / gamma
-    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
-    brightened = cv2.LUT(image, table)
+    # 1. 影（照明成分）を推定する
+    # 強力なガウスぼかしをかけることで、文字を消して「明るさのムラ」だけを抽出します
+    dilated_img = cv2.dilate(image, np.ones((7, 7), np.uint8))  # 文字を少し太らせて消えやすくする
+    bg_img = cv2.medianBlur(dilated_img, 21)  # 中央値フィルタでノイズ除去
+    bg_img = cv2.GaussianBlur(bg_img, (51, 51), 0)  # 大きくぼかして背景を作る
     
-    # コントラスト調整（低く設定）
-    alpha = 1.05  # コントラスト（1.0に近づけて低くする）
-    beta = 0
-    enhanced = cv2.convertScaleAbs(brightened, alpha=alpha, beta=beta)
+    # 2. 元画像から背景成分を除去する（除算）
+    # 「元画像 / 背景画像」という計算をすることで、ムラがキャンセルされます
+    result = cv2.divide(image, bg_img, scale=255)
     
-    return enhanced
+    # 3. 少しだけコントラストを強調して文字を濃くする
+    # これにより、紙の質感を生かしつつ、読みやすくします
+    final = cv2.convertScaleAbs(result, alpha=1.1, beta=-20)
+    
+    return final
 
 
 def crop_bounding_rect(image: np.ndarray, src_points: List[Tuple[int, int]]) -> np.ndarray:
